@@ -28,7 +28,7 @@ public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMes
         // Register chat listener and plugin messenger
         Server server = getServer();
         Messenger messenger = server.getMessenger();
-        messenger.registerIncomingPluginChannel(this, channel, null);
+        messenger.registerIncomingPluginChannel(this, channel, this);
         messenger.registerOutgoingPluginChannel(this, channel);
         server.getPluginManager().registerEvents(this, this);
     }
@@ -45,6 +45,7 @@ public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMes
 
         // Build data stream
         ByteArrayDataOutput data = ByteStreams.newDataOutput();
+        data.writeUTF(event.getPlayer().getDisplayName());
         data.writeUTF(event.getMessage());
 
         // Send plugin message
