@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,7 +29,7 @@ public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMes
         // Register chat listener and plugin messenger
         Server server = getServer();
         Messenger messenger = server.getMessenger();
-        messenger.registerIncomingPluginChannel(this, channel, this);
+        messenger.registerIncomingPluginChannel(this, channel, null);
         messenger.registerOutgoingPluginChannel(this, channel);
         server.getPluginManager().registerEvents(this, this);
     }
@@ -58,6 +59,6 @@ public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMes
         if (!channel.equals(this.channel)) return;
 
         // Broadcast
-        Bukkit.broadcastMessage(ByteStreams.newDataInput(message).readUTF());
+        Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', ByteStreams.newDataInput(message).readUTF()));
     }
 }
