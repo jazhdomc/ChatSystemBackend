@@ -1,5 +1,5 @@
 name: ChatSystemBackend
-version: 0.1.0
+version: 0.1.2
 description: A plugin developed by JazhdoMC for making global chat possible by using ChatSystemVelocity as a transfer point for all messages.
 author: jazhdo
 main: mc.jazhdo.ChatSystemBackend
