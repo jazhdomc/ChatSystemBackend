@@ -10,15 +10,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
+import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
+import net.md_5.bungee.api.chat.TextComponent;
+
 public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMessageListener {
-    private final String channel = "chatsystem:global";
+    private final String global = "chatsystem:global", single = "chatsystem:single";
     private Logger log;
 
     @Override
@@ -29,8 +34,9 @@ public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMes
         // Register chat listener and plugin messenger
         Server server = getServer();
         Messenger messenger = server.getMessenger();
-        messenger.registerIncomingPluginChannel(this, channel, this);
-        messenger.registerOutgoingPluginChannel(this, channel);
+        messenger.registerIncomingPluginChannel(this, global, this);
+        messenger.registerOutgoingPluginChannel(this, global);
+        messenger.registerIncomingPluginChannel(this, single, this);
         server.getPluginManager().registerEvents(this, this);
     }
 
@@ -50,15 +56,35 @@ public class ChatSystemBackend extends JavaPlugin implements Listener, PluginMes
         data.writeUTF(event.getMessage());
 
         // Send plugin message
-        event.getPlayer().sendPluginMessage(this, channel, data.toByteArray());
+        event.getPlayer().sendPluginMessage(this, global, data.toByteArray());
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        // Disable join messages for the better formatted one from the proxy
+        event.setJoinMessage(null);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // Disable quit messages for the better formatted one from the proxy
+        event.setQuitMessage(null);
     }
 
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        // Only handle logic if its for this channel
-        if (!channel.equals(this.channel)) return;
+        // Broadcast message or send it to a single player
+        if (channel.equals(this.global)) Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', ByteStreams.newDataInput(message).readUTF()));
+        else if (channel.equals(this.single)) {
+            // Get input stream
+            ByteArrayDataInput input = ByteStreams.newDataInput(message);
 
-        // Broadcast
-        Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', ByteStreams.newDataInput(message).readUTF()));
+            // Get player if exists
+            Player p = Bukkit.getPlayer(input.readUTF());
+            if (p == null) return;
+
+            // Send the player the message
+            p.spigot().sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', input.readUTF())));
+        }
     }
 }
